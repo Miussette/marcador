@@ -268,6 +268,7 @@ export function parseDesign(raw: string | null | undefined): ScoreboardDesign | 
       preset: candidate.preset === 'fiba1' || candidate.preset === 'fiba2' || candidate.preset === 'default' ? candidate.preset : undefined,
       sport: SPORTS.some(s => s.id === candidate.sport) ? candidate.sport : undefined,
       background: typeof candidate.background === 'string' && candidate.background ? candidate.background : null,
+      backgroundColor: typeof candidate.backgroundColor === 'string' ? candidate.backgroundColor : undefined,
       items,
     }
   } catch {
@@ -291,6 +292,11 @@ function isDesignItem(value: unknown): value is DesignItem {
 
 export function serializeDesign(design: ScoreboardDesign): string {
   return JSON.stringify(design)
+}
+
+/** Una imagen de pantalla sustituye los bloques que cubren todo el lienzo. */
+export function visibleDesignItems(design: ScoreboardDesign): DesignItem[] {
+  return design.items.filter(item => !(design.background && item.type === 'box' && item.x === 0 && item.y === 0 && item.w === DESIGN_CANVAS.width && item.h === DESIGN_CANVAS.height))
 }
 
 /** Recorta un valor al lienzo para que ningún ítem se salga. */

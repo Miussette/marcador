@@ -628,6 +628,7 @@ export interface DesignItem {
 
 /** Diseño personalizado de la pantalla de marcador. */
 export interface ScoreboardDesign {
+  backgroundColor?: string
   preset?: 'default' | 'fiba1' | 'fiba2'
   sport?: SportId
   /** Si está desactivado se usan las plantillas nativas (classic/modern/…). */

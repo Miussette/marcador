@@ -81,6 +81,19 @@ async function run() {
   const repo = load('electron/repository.ts')
   await db.initDatabase()
   const examples = load('electron/examples.ts')
+  const designs = load('src/features/design/designModel.ts')
+  for (const create of [designs.fiba1Design, designs.fiba2Design]) {
+    const design = create()
+    const originalCount = designs.visibleDesignItems(design).length
+    design.background = 'data:image/png;base64,example'
+    design.backgroundColor = '#123456'
+    const restored = designs.parseDesign(designs.serializeDesign(design))
+    assert.equal(restored.backgroundColor, '#123456')
+    assert.equal(designs.visibleDesignItems(restored).length, originalCount - 1)
+    assert(designs.visibleDesignItems(restored).some(item => item.type === 'score_home'))
+    restored.background = null
+    assert.equal(designs.visibleDesignItems(restored).length, originalCount)
+  }
   const originalCreatePlayer = repo.createPlayer
   repo.createPlayer = () => { throw new Error('Fallo simulado al crear plantilla') }
   assert.throws(() => examples.ensureExampleProjects('2026-10-14'), /Fallo simulado/)

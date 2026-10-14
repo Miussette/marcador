@@ -51,10 +51,8 @@ export function App() {
     const boot = async (): Promise<void> => {
       try {
         await useSettingsStore.getState().load()
-        const active = await useMatchesStore.getState().restoreActive()
-        if (active && !cancelled) {
-          navigate(`/p/${active.projectId}/control/${active.id}`, { replace: true })
-        }
+        await useMatchesStore.getState().restoreActive()
+        if (!cancelled) navigate('/', { replace: true })
       } catch (error) {
         console.warn('[boot] No se pudo recuperar el estado:', error)
       } finally {
@@ -65,11 +63,7 @@ export function App() {
     return () => {
       cancelled = true
     }
-    // Ejecutar el arranque UNA sola vez. `navigate` cambia de identidad en cada
-    // navegación (su closure depende de la ruta actual), así que con [navigate]
-    // el arranque se re-ejecutaba en cada cambio de página y, si había un partido
-    // activo, devolvía al usuario al panel de control ("Salir" no parecía funcionar).
-    // Aquí `navigate` solo se usa con rutas absolutas, válido desde el primer cierre.
+    // Ejecutar una sola vez: los cambios de ruta no deben repetir el arranque.
   }, [])
 
   if (booting) return <BootScreen />

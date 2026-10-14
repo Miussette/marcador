@@ -15,6 +15,8 @@ import {
   X,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/Feedback'
+import { Modal } from '@/components/ui/Modal'
+import { ScreenSetup } from '@/features/display/ScreenSetup'
 import { Button } from '@/components/ui/Button'
 import { ColorField, Field, Input, Select } from '@/components/ui/Form'
 import { DesignItemView } from '@/features/design/DesignItemView'
@@ -33,6 +35,7 @@ import {
   parseDesign,
   previewState,
   serializeDesign,
+  visibleDesignItems,
 } from '@/features/design/designModel'
 import { timerElapsed } from '@/features/timer/timer'
 import { useTicker } from '@/features/timer/useTicker'
@@ -86,6 +89,7 @@ export function DesignEditorPage() {
   const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [dragging, setDragging] = useState(false)
+  const [screensOpen, setScreensOpen] = useState(false)
 
   const dragRef = useRef<DragState | null>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
@@ -434,11 +438,11 @@ export function DesignEditorPage() {
           <section className="rounded-xl border border-line bg-app/60 p-3">
             <p className="label-muted mb-3">Propiedades de pantalla</p>
 
-            <Field label="Screen">
-              <Select value="scoreboard" disabled>
-                <option value="scoreboard">Scoreboard · Marcador principal</option>
-              </Select>
-            </Field>
+            <p className="mb-2 text-xs text-muted">Marcador principal</p>
+            <Button variant="secondary" size="sm" block onClick={() => setScreensOpen(true)}>Configurar monitores y abrir pantalla</Button>
+            <div className="mt-3">
+              <ColorField label="Color de fondo de pantalla" value={toHex(design?.backgroundColor ?? '', '#05070A')} onChange={value => patch(current => ({ ...current, backgroundColor: value, items: current.items.map(item => item.type === 'box' && item.x === 0 && item.y === 0 && item.w === DESIGN_CANVAS.width && item.h === DESIGN_CANVAS.height ? { ...item, bg: value } : item) }))} />
+            </div>
 
             <div className="mt-3">
               <span className="label-muted mb-1.5 block">Imagen de fondo</span>
@@ -699,6 +703,7 @@ export function DesignEditorPage() {
                   'relative h-full w-full overflow-hidden bg-[#05070A] shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)] ring-1 ring-white/10',
                   dragging ? 'cursor-grabbing' : 'cursor-default',
                 )}
+                style={{ backgroundColor: design?.backgroundColor }}
               >
                 {design?.background ? (
                   <img src={design.background} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -714,7 +719,7 @@ export function DesignEditorPage() {
                   }}
                 />
 
-                {items.map((item) => {
+                {(design ? visibleDesignItems(design) : []).map((item) => {
                   const isSelected = item.id === selectedId
                   return (
                     <div
@@ -759,6 +764,7 @@ export function DesignEditorPage() {
           </div>
         </main>
       </div>
+      <Modal open={screensOpen} onClose={() => setScreensOpen(false)} title="Propiedades de pantalla" size="xl"><ScreenSetup /></Modal>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import { DesignItemView } from '@/features/design/DesignItemView'
 import { useCanvasScale } from '@/features/design/useCanvasScale'
 import { DESIGN_CANVAS } from '@/types'
+import { visibleDesignItems } from '@/features/design/designModel'
 import type { LayoutProps } from './common'
 
 /**
@@ -16,7 +17,7 @@ export function DesignLayout({ state, elapsedMs }: LayoutProps) {
   if (!design) return null
 
   return (
-    <div ref={boxRef} className="relative h-full w-full overflow-hidden bg-[#05070A]">
+    <div ref={boxRef} className="relative h-full w-full overflow-hidden bg-[#05070A]" style={{ backgroundColor: design.backgroundColor }}>
       {design.background ? (
         <img
           src={design.background}
@@ -34,7 +35,7 @@ export function DesignLayout({ state, elapsedMs }: LayoutProps) {
           transform: `translate(-50%, -50%) scale(${scale})`,
         }}
       >
-        {design.items.filter(item => item.type !== 'player_row' && (item.type !== 'player_stats_row' || state.showPlayers)).map((item) => (
+        {visibleDesignItems(design).filter(item => item.type !== 'player_row' && (item.type !== 'player_stats_row' || state.showPlayers)).map((item) => (
           <div
             key={item.id}
             className="absolute"
