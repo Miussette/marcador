@@ -1,0 +1,25 @@
+# Dependencias
+node_modules/
+
+# Builds
+dist/
+dist-electron/
+release/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+
+# Archivos locales y resultados de pruebas
+.env
+.env.*
+!.env.example
+*.db
+*.db-shm
+*.db-wal
+scripts/shots/
+scripts/*-result.json
+/-w

@@ -1,0 +1,66 @@
+const fs = require('node:fs')
+const path = require('node:path')
+const assert = require('node:assert/strict')
+const ts = require('typescript')
+const root = path.resolve(__dirname, '..')
+const cache = new Map()
+function load(file) {
+  const filename = path.resolve(root, file)
+  if (cache.has(filename)) return cache.get(filename).exports
+  const module = { exports: {} }; cache.set(filename, module)
+  const code = ts.transpileModule(fs.readFileSync(filename, 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText
+  const req = name => name === '@/types' ? load('src/types/index.ts') : name.startsWith('.') ? load(path.relative(root, path.resolve(path.dirname(filename), name + '.ts'))) : require(name)
+  new Function('require', 'module', 'exports', code)(req, module, module.exports)
+  return module.exports
+}
+const { initialSportState, applySportAction, tennisPointLabel, rankedResults } = load('src/features/sports/rules.ts')
+let state
+const start = sport => { state = initialSportState(sport) }
+const act = action => { state = applySportAction(state, action) }
+const point = (side, n = 1) => { for (let i = 0; i < n; i++) act({ type: 'point', side }) }
+const game = side => point(side, 4)
+start('tennis'); point('home', 3); point('away', 3); point('home')
+assert.equal(tennisPointLabel(state, 'home'), 'AD')
+point('away'); assert.deepEqual(state.current.points, [3, 3])
+point('home', 2); assert.deepEqual(state.current.games, [1, 0])
+act({ type: 'undo' }); assert.deepEqual(state.current.games, [0, 0]); assert.equal(tennisPointLabel(state, 'home'), 'AD')
+start('padel'); point('home', 3); point('away', 3)
+for (let i = 0; i < 2; i++) { point('home'); point('away') }
+assert.equal(state.current.deuceReturns, 2)
+point('away'); assert.deepEqual(state.current.games, [0, 1])
+start('padel'); act({ type: 'configure', config: { deuce: 'golden' } }); point('home', 3); point('away', 3); point('away'); assert.equal(state.current.games[1], 1)
+start('tennis'); act({ type: 'configure', config: { setsToWin: 1 } })
+for (let i = 0; i < 6; i++) { game('home'); game('away') }
+assert.equal(state.current.tieBreak, true); const first = state.current.server
+point('home'); assert.notEqual(state.current.server, first)
+point('away'); assert.notEqual(state.current.server, first)
+point('home'); assert.equal(state.current.server, first)
+point('home', 3); point('away', 5); assert.equal(state.current.winner, null)
+point('home', 3); assert.equal(state.current.winner, 'home'); assert.deepEqual(state.current.sets, [[7, 6]])
+act({ type: 'undo' }); assert.equal(state.current.winner, null); assert.equal(state.current.tieBreak, true)
+start('volleyball'); act({ type: 'configure', config: { setsToWin: 1 } }); point('home', 14); point('away', 14); point('home'); assert.equal(state.current.winner, null); point('home'); assert.equal(state.current.winner, 'home')
+start('volleyball'); point('home', 24); point('away', 24); point('home'); assert.equal(state.current.sets.length, 0); point('home'); assert.deepEqual(state.current.sets, [[26, 24]])
+start('badminton'); for (let i = 0; i < 29; i++) { point('home'); point('away') }; point('away'); assert.deepEqual(state.current.sets, [[29, 30]])
+start('table_tennis'); point('home'); assert.equal(state.current.server, 'home'); point('away'); assert.equal(state.current.server, 'away')
+start('baseball'); for (let i = 0; i < 2; i++) act({ type: 'strike' }); act({ type: 'foul' }); assert.equal(state.current.strikes, 2); act({ type: 'strike' }); assert.equal(state.current.outs, 1)
+for (let i = 0; i < 3; i++) act({ type: 'base', index: i })
+for (let i = 0; i < 4; i++) act({ type: 'ball' })
+assert.deepEqual(state.current.points, [0, 1]); assert.deepEqual(state.current.bases, [true, true, true])
+act({ type: 'out' }); act({ type: 'out' }); assert.equal(state.current.half, 'bottom'); assert.equal(state.current.outs, 0); assert.deepEqual(state.current.bases, [false, false, false])
+act({ type: 'undo' }); assert.equal(state.current.half, 'top'); assert.equal(state.current.outs, 2)
+start('baseball'); act({ type: 'configure', config: { innings: 1 } }); act({ type: 'half' }); act({ type: 'run', side: 'home', delta: 1 }); assert.equal(state.current.winner, 'home')
+start('baseball'); act({ type: 'configure', config: { innings: 1 } }); act({ type: 'half' }); act({ type: 'half' }); assert.equal(state.current.inning, 2); assert.equal(state.current.winner, null)
+start('judo'); act({ type: 'technique', side: 'home', technique: 'waza' }); assert.equal(state.current.winner, null); act({ type: 'technique', side: 'home', technique: 'waza' }); assert.equal(state.current.winner, 'home'); act({ type: 'undo' }); assert.equal(state.current.winner, null)
+start('judo'); for (let i = 0; i < 3; i++) act({ type: 'penalty', side: 'away' }); assert.equal(state.current.winner, 'home')
+start('judo'); act({ type: 'golden' }); act({ type: 'technique', side: 'away', technique: 'yuko' }); assert.equal(state.current.winner, 'away')
+start('boxing'); act({ type: 'round' }); assert.equal(state.current.round, 2); act({ type: 'finish', winner: 'draw' }); assert.equal(state.current.winner, 'draw'); assert.throws(() => point('home'))
+start('long_jump')
+for (const [id, attempts] of [['a', [6.1, 6.4]], ['b', [6.4]], ['c', [6.2]], ['d', [null]]]) act({ type: 'result', result: { id, name: id, attempts, status: 'valid' } })
+assert.deepEqual(rankedResults(state).map(row => row.rank), [1, 1, 3, null])
+act({ type: 'result', result: { id: 'a', name: 'a', attempts: [6.8], status: 'dq' } }); assert.equal(rankedResults(state)[0].result.id, 'b')
+act({ type: 'undo' }); assert.equal(rankedResults(state)[0].result.id, 'a')
+assert.throws(() => act({ type: 'configure', config: { attempts: 2 } }))
+assert.throws(() => act({ type: 'result', result: { id: 'x', name: 'x', attempts: [NaN], status: 'valid' } }))
+act({ type: 'reset' }); assert.equal(state.current.results.length, 0)
+start('tennis'); assert.throws(() => act({ type: 'configure', config: { setsToWin: 0 } }))
+console.log('Sports regression: tennis, padel, sets, baseball, combat, athletics passed')

@@ -1,0 +1,86 @@
+{
+  "name": "marcador-pro",
+  "productName": "Marcador Pro",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Software profesional de gestión de marcadores deportivos (control + pantalla de marcador)",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck && vite build",
+    "test:screens": "node scripts/verify-screens.cjs",
+    "test:sports": "node scripts/verify-sports.cjs",
+    "test:core": "node scripts/verify-core.cjs",
+    "preview": "vite preview",
+    "dist:win": "npm run build && electron-builder --win"
+  },
+  "dependencies": {
+    "jspdf": "^4.2.1",
+    "lucide-react": "^1.50.0",
+    "obs-websocket-js": "^5.0.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router-dom": "^7.18.4",
+    "sql.js": "^1.14.2",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.2",
+    "vite-plugin-electron": "^1.1.2"
+  },
+  "build": {
+    "appId": "com.marcadorpro.desktop",
+    "productName": "Marcador Pro",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/sql.js/**"
+    ],
+    "electronDist": "node_modules/electron/dist",
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Marcador Pro",
+      "artifactName": "MarcadorPro-Setup-${version}.exe"
+    },
+    "portable": {
+      "artifactName": "MarcadorPro-Portable-${version}.exe"
+    }
+  }
+}
