@@ -33,7 +33,7 @@ import { OFFICIAL_TYPES, OFFICIAL_GRADES, BASKETBALL_PERIODS } from '@/types'
 import type { DownTimerSnapshot, Match, MatchPeriod, Team } from '@/types'
 import { formatClock } from '@/utils/time'
 import { cn } from '@/utils/cn'
-import { useHornStore } from '@/stores/hornStore'
+import { HornControls } from '@/features/serial/HornControls'
 
 export type ControlSection = 'score' | 'lineup' | 'officials' | 'stats'
 
@@ -65,7 +65,6 @@ function breakTimerOf(match: Match): DownTimerSnapshot {
 }
 
 export function BasketballControl({ match, home, away, elapsedMs, saving }: BasketballControlProps) {
-  const horn = useHornStore()
   const tick = useTicker(100)
   const store = useActiveMatchStore.getState
   const playersByTeam = usePlayersStore((state) => state.playersByTeam)
@@ -268,11 +267,7 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
 
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-      <div className="flex items-center gap-3">
-        <Button variant="secondary" disabled={!horn.connected || horn.busy} onClick={() => void horn.send()}>Bocina</Button>
-        <span className="text-xs text-muted">{horn.connected ? horn.portName : 'Conecta la bocina en Configuración'}</span>
-        {horn.error && <span role="alert" className="text-xs text-danger">{horn.error}</span>}
-      </div>
+      <HornControls />
       {/* Barra de acciones */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface p-2">
         <div className="flex flex-wrap gap-1.5">

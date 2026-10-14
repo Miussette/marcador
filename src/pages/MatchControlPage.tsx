@@ -21,7 +21,7 @@ import { useActiveMatchStore } from '@/stores/activeMatchStore'
 import { useDisplayStore } from '@/stores/displayStore'
 import { usePlayersStore } from '@/stores/playersStore'
 import { useShortcutsStore } from '@/stores/shortcutsStore'
-import { useHornStore } from '@/stores/hornStore'
+import { HornControls } from '@/features/serial/HornControls'
 import { activeShortcuts } from '@/utils/shortcuts'
 import { STATUS_META, isQuarterSport, isSetSport } from '@/utils/format'
 import { formatClock, formatDate, matchMinute } from '@/utils/time'
@@ -42,7 +42,6 @@ export function MatchControlPage() {
 
   const { match, project, home, away, events, loading, error, saving, playersVisible } = useActiveMatchStore()
   const display = useDisplayStore()
-  const horn = useHornStore()
   const shortcutBindings = useShortcutsStore(state => state.items)
   const players = usePlayersStore((state) => state.playersByTeam)
   const loadTeam = usePlayersStore((state) => state.reloadTeam)
@@ -135,7 +134,7 @@ export function MatchControlPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          {football && <Button variant="secondary" size="sm" disabled={!horn.connected || horn.busy} title={horn.connected ? `Bocina: ${horn.portName}` : 'Conecta la bocina en Configuración'} onClick={() => void horn.send()}>Bocina</Button>}
+          {football && <HornControls />}
           <Button variant="outline" size="sm" onClick={() => setScreensOpen(true)}>3 pantallas</Button>
           <Button variant="outline" size="sm" onClick={() => store.setPlayersVisible(!showPlayers)}>
             {showPlayers ? 'Ocultar jugadores' : 'Mostrar jugadores'}
@@ -192,7 +191,6 @@ export function MatchControlPage() {
           )}
         </div>
       </header>
-      {football && horn.error && <p role="alert" className="px-5 py-2 text-xs text-danger">Bocina: {horn.error}</p>}
 
       <main className="flex flex-1 flex-col overflow-hidden">
         {basketball ? (
