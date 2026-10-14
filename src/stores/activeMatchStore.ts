@@ -25,6 +25,7 @@ import { toast } from './toastStore'
 export type Side = 'home' | 'away'
 
 interface ActiveMatchState {
+  adjustPlayerStat: (playerId: string, key: 'points' | 'fouls', delta: number) => Promise<void>
   setPossession: (side: Side | null) => Promise<void>
   sportAction: (action: SportAction) => Promise<void>
   match: Match | null
@@ -149,6 +150,15 @@ export const useActiveMatchStore = create<ActiveMatchState>((set, get) => {
   }
 
   return {
+    adjustPlayerStat: async (playerId, key, delta) => {
+      const current = get().match
+      if (!current || get().saving) return
+      set({ saving: true })
+      try {
+        const updated = await api.matches.adjustPlayerStat(current.id, playerId, key, delta)
+        if (get().match?.id === updated.id) { set({ match: updated }); updateList(updated); sync(updated) }
+      } catch (error) { toast.error(error) } finally { set({ saving: false }) }
+    },
     setPossession: async possession => { await commit({ possession }) },
     sportAction: async action => {
       const current = get().match

@@ -1,5 +1,3 @@
-import { api } from '@/services/api'
-import { toast } from '@/stores/toastStore'
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeftRight,
@@ -61,7 +59,7 @@ function shotClockOf(match: Match): DownTimerSnapshot {
 }
 
 function breakTimerOf(match: Match): DownTimerSnapshot {
-  return match.breakTimer ?? createDownTimer(10 * 60_000)
+  return match.breakTimer ?? createDownTimer(60_000)
 }
 
 export function BasketballControl({ match, home, away, elapsedMs, saving }: BasketballControlProps) {
@@ -130,9 +128,7 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
     playerStats[playerId] ?? { points: 0, fouls: 0 }
 
   const bumpStat = (playerId: string, key: 'points' | 'fouls', delta: number): void => {
-    void api.matches.adjustPlayerStat(match.id, playerId, key, delta).then(updated => {
-      if (store().match?.id === updated.id) store().adoptMatch(updated)
-    }).catch(toast.error)
+    void store().adjustPlayerStat(playerId, key, delta)
   }
 
   const doExchange = async (): Promise<void> => {
@@ -486,6 +482,8 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
                               <button
                                 type="button"
                                 onClick={() => bumpStat(player.id, 'points', -1)}
+                                disabled={saving}
+                                aria-label={`Restar un punto a ${player.firstName} ${player.lastName}`}
                                 className="rounded border border-line px-2 py-0.5 text-xs text-muted hover:text-ink"
                               >
                                 −
@@ -498,6 +496,8 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
                                   key={n}
                                   type="button"
                                   onClick={() => bumpStat(player.id, 'points', n)}
+                                  disabled={saving}
+                                  aria-label={`Sumar ${n} puntos a ${player.firstName} ${player.lastName}`}
                                   className="rounded border border-success/40 bg-success/10 px-1.5 py-0.5 text-[11px] font-bold text-success hover:bg-success/20"
                                 >
                                   +{n}
@@ -510,6 +510,8 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
                               <button
                                 type="button"
                                 onClick={() => bumpStat(player.id, 'fouls', -1)}
+                                disabled={saving}
+                                aria-label={`Restar una falta a ${player.firstName} ${player.lastName}`}
                                 className="rounded border border-line px-2 py-0.5 text-xs text-muted hover:text-ink"
                               >
                                 −
@@ -520,6 +522,8 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
                               <button
                                 type="button"
                                 onClick={() => bumpStat(player.id, 'fouls', 1)}
+                                disabled={saving}
+                                aria-label={`Sumar una falta a ${player.firstName} ${player.lastName}`}
                                 className="rounded border border-danger/40 bg-danger/10 px-2 py-0.5 text-[11px] font-bold text-danger hover:bg-danger/20"
                               >
                                 +
@@ -573,6 +577,9 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
         {/* Break Timer */}
         <section className="card p-4">
           <p className="label-muted mb-3">Break Timer</p>
+          <div className="mb-3 grid grid-cols-3 gap-2">
+            {[30000, 60000, 90000].map(duration => <Button key={duration} size="sm" variant={breakTimer.durationMs === duration ? 'primary' : 'secondary'} disabled={saving} onClick={() => void store().setBreakTimer(createDownTimer(duration))}>{formatClock(duration)}</Button>)}
+          </div>
           <p
             className={cn(
               'text-center font-mono text-4xl leading-none font-black tabular-nums',
@@ -592,22 +599,6 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
               disabled={saving}
             >
               {breakTimer.running ? 'Pausa' : 'Inicio'}
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => void store().setBreakTimer(changeDownTimerMs(breakTimer, 30_000))}
-              disabled={saving}
-            >
-              +30s
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => void store().setBreakTimer(changeDownTimerMs(breakTimer, -30_000))}
-              disabled={saving}
-            >
-              −30s
             </Button>
             <Button
               variant="danger"

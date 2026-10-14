@@ -7,6 +7,28 @@ export const DEFAULT_SHORTCUTS = [
   { action: 'goal.removeHome', keys: 'CTRL+Q' },
   { action: 'goal.removeAway', keys: 'CTRL+P' },
   { action: 'display.fullscreen', keys: 'F11' },
+  { action: 'points.home2', keys: 'W' },
+  { action: 'points.home3', keys: 'E' },
+  { action: 'points.away2', keys: 'O' },
+  { action: 'points.away3', keys: 'I' },
+  { action: 'horn.send', keys: 'B' },
+  { action: 'break.toggle', keys: 'T' },
+  { action: 'break.reset', keys: 'CTRL+T' },
+  { action: 'break.30', keys: 'CTRL+SHIFT+1' },
+  { action: 'break.60', keys: 'CTRL+SHIFT+2' },
+  { action: 'break.90', keys: 'CTRL+SHIFT+3' },
+  { action: 'shot.toggle', keys: 'S' },
+  { action: 'shot.24', keys: 'R' },
+  { action: 'shot.14', keys: 'SHIFT+R' },
+]
+
+export const EXTRA_SHORTCUT_ACTIONS = [
+  { value: 'points.home2', label: 'Local +2' }, { value: 'points.home3', label: 'Local +3' },
+  { value: 'points.away2', label: 'Visitante +2' }, { value: 'points.away3', label: 'Visitante +3' },
+  { value: 'horn.send', label: 'Activar bocina' },
+  { value: 'break.toggle', label: 'Descanso: iniciar / pausar' }, { value: 'break.reset', label: 'Descanso: reiniciar' },
+  { value: 'break.30', label: 'Descanso: 30 segundos' }, { value: 'break.60', label: 'Descanso: 1 minuto' }, { value: 'break.90', label: 'Descanso: 1:30' },
+  { value: 'shot.toggle', label: 'Posesión: iniciar / pausar reloj' }, { value: 'shot.24', label: 'Posesión: 24 segundos' }, { value: 'shot.14', label: 'Posesión: 14 segundos' },
 ]
 
 export function normalizeShortcut(value: string): string {

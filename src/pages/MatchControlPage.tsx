@@ -22,12 +22,15 @@ import { useDisplayStore } from '@/stores/displayStore'
 import { usePlayersStore } from '@/stores/playersStore'
 import { useShortcutsStore } from '@/stores/shortcutsStore'
 import { HornControls } from '@/features/serial/HornControls'
-import { activeShortcuts } from '@/utils/shortcuts'
+import { QuickVideos } from '@/features/matches/QuickVideos'
+import { KeyboardControls } from '@/features/matches/KeyboardControls'
+import { activeShortcuts, EXTRA_SHORTCUT_ACTIONS } from '@/utils/shortcuts'
 import { STATUS_META, isQuarterSport, isSetSport } from '@/utils/format'
 import { formatClock, formatDate, matchMinute } from '@/utils/time'
 import type { MatchEvent } from '@/types'
 
 const ACTION_LABELS: Record<string, string> = {
+  ...Object.fromEntries(EXTRA_SHORTCUT_ACTIONS.map(item => [item.value, item.label])),
   'clock.toggle': 'Iniciar / pausar', 'clock.reset': 'Reiniciar cron?metro',
   'goal.home': 'Puntuaci?n local', 'goal.away': 'Puntuaci?n visitante',
   'goal.removeHome': 'Restar local', 'goal.removeAway': 'Restar visitante',
@@ -112,7 +115,7 @@ export function MatchControlPage() {
   const status = STATUS_META[match.status]
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-app">
+    <div data-match-controls className="flex h-screen flex-col overflow-hidden bg-app">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-surface px-5 py-3">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" icon={<ArrowLeft size={16} />} onClick={() => navigate(`/p/${projectId}/matches`)}>
@@ -191,6 +194,8 @@ export function MatchControlPage() {
           )}
         </div>
       </header>
+      <KeyboardControls />
+      <QuickVideos projectId={match.projectId} />
 
       <main className="flex flex-1 flex-col overflow-hidden">
         {basketball ? (

@@ -1,6 +1,6 @@
 import { initialSportState, applySportAction, ruleFamily, sportScores } from '../src/features/sports/rules'
 import type { SportAction } from '../src/features/sports/types'
-import { normalizeShortcut, validShortcut } from '../src/utils/shortcuts'
+import { EXTRA_SHORTCUT_ACTIONS, normalizeShortcut, validShortcut } from '../src/utils/shortcuts'
 import { randomUUID } from 'node:crypto'
 import fs from 'node:fs'
 import { dialog } from 'electron'
@@ -1253,11 +1253,17 @@ export function adjustPlayerStat(matchId: string, playerId: string, key: 'points
   if (!['points', 'fouls'].includes(key) || !Number.isInteger(delta) || Math.abs(delta) > 3) throw new Error('Ajuste de estad?stica inv?lido.')
   const stats = match.playerStats ?? {}
   const current = stats[playerId] ?? { points: 0, fouls: 0 }
-  return updateMatch(matchId, { playerStats: { ...stats, [playerId]: { ...current, [key]: Math.max(0, current[key] + delta) } } })
+  const next = Math.max(0, current[key] + delta)
+  const patch: Partial<Match> = { playerStats: { ...stats, [playerId]: { ...current, [key]: next } } }
+  if (key === 'points') {
+    const scoreKey = String(player.team_id) === match.homeTeamId ? 'homeScore' : 'awayScore'
+    patch[scoreKey] = Math.max(0, match[scoreKey] + next - current.points)
+  }
+  return updateMatch(matchId, patch)
 }
 
 function validateShortcut(input: NewShortcutBindingInput, excludeId?: string): void {
   const actions = ['goal.home', 'goal.away', 'goal.removeHome', 'goal.removeAway', 'clock.toggle', 'clock.reset', 'display.fullscreen', 'event.add', 'countdown.toggle']
-  if (!actions.includes(input.action) || !validShortcut(input.keys)) throw new Error('Acci?n o combinaci?n de teclas inv?lida. Ejemplo: CTRL+Q.')
+  if (!actions.concat(EXTRA_SHORTCUT_ACTIONS.map(item => item.value)).includes(input.action) || !validShortcut(input.keys)) throw new Error('Acci?n o combinaci?n de teclas inv?lida. Ejemplo: CTRL+Q.')
   if (input.enabled && listShortcuts().some(item => item.id !== excludeId && item.enabled && normalizeShortcut(item.keys) === normalizeShortcut(input.keys))) throw new Error('Esa combinaci?n ya est? asignada a otro atajo activo.')
 }

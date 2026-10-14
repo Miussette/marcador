@@ -8,8 +8,10 @@ import { Field, Input, Select } from '@/components/ui/Form'
 import { useShortcutsStore } from '@/stores/shortcutsStore'
 import { toast } from '@/stores/toastStore'
 import type { ShortcutBinding } from '@/types'
+import { EXTRA_SHORTCUT_ACTIONS } from '@/utils/shortcuts'
 
 const ACTION_OPTIONS = [
+  ...EXTRA_SHORTCUT_ACTIONS,
   { value: 'goal.home', label: 'Gol local' },
   { value: 'goal.away', label: 'Gol visitante' },
   { value: 'goal.removeHome', label: 'Restar puntuaci?n local' },
