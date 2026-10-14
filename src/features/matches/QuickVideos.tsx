@@ -34,7 +34,7 @@ export function QuickVideos({ projectId }: { projectId: string }) {
       await refresh()
     } catch (error) { toast.error(error) } finally { setBusy(false) }
   }
-  return <section className="mx-4 my-2 max-h-40 shrink-0 overflow-auto rounded-xl border border-line bg-surface p-3">
+  return <section className="quick-videos mx-4 my-2 max-h-40 shrink-0 overflow-auto rounded-xl border border-line bg-surface p-3">
     <div className="mb-2 flex flex-wrap items-center gap-2"><span className="label-muted">Videos rápidos</span><Button size="sm" disabled={busy} onClick={() => void add()}>Añadir video</Button><Button size="sm" onClick={() => void refresh().catch(toast.error)}>Actualizar lista</Button><Button size="sm" variant="danger" onClick={() => void api.display.stopContent().catch(toast.error)}>Detener · Alt+0</Button></div>
     <div className="flex flex-wrap gap-2">{items.map((video, index) => <Button key={video.id} size="sm" variant={current?.sourceId === video.id ? 'success' : 'secondary'} onClick={() => play(video)}>{video.name}{index < 9 ? ` · Alt+${index + 1}` : ''}</Button>)}{!items.length && <p className="text-xs text-muted">Añade videos aquí o en Videos del proyecto.</p>}</div>
   </section>

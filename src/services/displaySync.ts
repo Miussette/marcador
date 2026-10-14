@@ -2,6 +2,7 @@ import { sportPeriod } from '@/features/sports/rules'
 import type { CountdownSnapshot, DisplayState, DisplaySyncState, Match, Project, Team, Player } from '@/types'
 import { periodLabel } from '@/utils/format'
 import { api } from './api'
+import { basketballDuration } from '@/features/timer/basketballClocks'
 
 export function buildDisplayState(input: {
   match: Match
@@ -29,6 +30,8 @@ export function buildDisplayState(input: {
       : null
 
   return {
+    gameDurationMs: ['basketball', 'basketball3x3'].includes(project?.sport ?? '') ? basketballDuration(match) : null,
+    timeoutTimer: match.timeoutActive ? match.breakTimer : null,
     playerStats: match.playerStats ?? {},
     homeTimeouts: match.homeTimeouts,
     awayTimeouts: match.awayTimeouts,

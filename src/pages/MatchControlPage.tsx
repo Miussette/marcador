@@ -24,6 +24,8 @@ import { useShortcutsStore } from '@/stores/shortcutsStore'
 import { HornControls } from '@/features/serial/HornControls'
 import { QuickVideos } from '@/features/matches/QuickVideos'
 import { KeyboardControls } from '@/features/matches/KeyboardControls'
+import { basketballRemaining } from '@/features/timer/basketballClocks'
+import { prepareHornAudio } from '@/features/serial/hornSound'
 import { activeShortcuts, EXTRA_SHORTCUT_ACTIONS } from '@/utils/shortcuts'
 import { STATUS_META, isQuarterSport, isSetSport } from '@/utils/format'
 import { formatClock, formatDate, matchMinute } from '@/utils/time'
@@ -51,10 +53,18 @@ export function MatchControlPage() {
 
   const [screensOpen, setScreensOpen] = useState(false)
   const [compact, setCompact] = useState(() => localStorage.getItem('match.control.compact') !== 'false')
+  const [discreet, setDiscreet] = useState(() => localStorage.getItem('match.control.discreet') === 'true')
   const [eventModalOpen, setEventModalOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<MatchEvent | null>(null)
 
   useMatchShortcuts(() => setEventModalOpen(true))
+  useEffect(() => {
+    const prepare = () => prepareHornAudio()
+    document.addEventListener('pointerdown', prepare, true)
+    document.addEventListener('keydown', prepare, true)
+    return () => { document.removeEventListener('pointerdown', prepare, true); document.removeEventListener('keydown', prepare, true) }
+  }, [])
+  useEffect(() => { void useActiveMatchStore.getState().expireBasketballClocks() }, [tick])
 
   useEffect(() => {
     void useActiveMatchStore.getState().load(matchId)
@@ -116,7 +126,7 @@ export function MatchControlPage() {
   const status = STATUS_META[match.status]
 
   return (
-    <div data-match-controls className={`flex h-screen flex-col overflow-hidden bg-app${compact ? ' match-compact' : ''}`}>
+    <div data-match-controls className={`flex h-screen flex-col overflow-hidden bg-app${compact ? ' match-compact' : ''}${discreet ? ' match-discreet' : ''}`}>
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-surface px-5 py-3">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" icon={<ArrowLeft size={16} />} onClick={() => navigate(`/p/${projectId}/matches`)}>
@@ -139,6 +149,7 @@ export function MatchControlPage() {
 
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setCompact(current => { localStorage.setItem('match.control.compact', String(!current)); return !current })}>{compact ? 'Vista normal' : 'Vista compacta'}</Button>
+          <Button variant="outline" size="sm" onClick={() => setDiscreet(current => { localStorage.setItem('match.control.discreet', String(!current)); return !current })}>{discreet ? 'Mostrar consola' : 'Consola discreta'}</Button>
           {football && <HornControls />}
           <Button variant="outline" size="sm" onClick={() => setScreensOpen(true)}>3 pantallas</Button>
           <Button variant="outline" size="sm" onClick={() => store.setPlayersVisible(!showPlayers)}>
@@ -201,7 +212,7 @@ export function MatchControlPage() {
 
       <main className="flex flex-1 flex-col overflow-hidden">
         {basketball ? (
-          <BasketballControl match={match} home={home} away={away} elapsedMs={elapsedMs} saving={saving} />
+          <BasketballControl match={match} home={home} away={away} elapsedMs={basketballRemaining(match, tick)} saving={saving} />
         ) : specialized && project ? (
           <SportControl match={match} sport={match.sportState?.sport ?? project.sport} home={home} away={away} players={allPlayers} elapsedMs={elapsedMs} saving={saving} />
         ) : (

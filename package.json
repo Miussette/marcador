@@ -12,6 +12,7 @@
     "test:screens": "node scripts/verify-screens.cjs",
     "test:sports": "node scripts/verify-sports.cjs",
     "test:core": "node scripts/verify-core.cjs",
+    "test:basketball": "node scripts/verify-basketball-clocks.cjs",
     "preview": "vite preview",
     "dist:win": "npm run build && electron-builder --win"
   },

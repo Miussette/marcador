@@ -10,6 +10,7 @@ export function scoreText(state: DisplayState, side: 'home' | 'away'): string {
 }
 
 export function displayClock(state: DisplayState, elapsed: number): number {
+  if (state.gameDurationMs != null) return Math.max(0, state.gameDurationMs - elapsed)
   const sport = state.sportState
   return sport?.family === 'combat' && !sport.current.goldenScore ? Math.max(0, sport.config.roundSeconds * 1000 - elapsed) : elapsed
 }

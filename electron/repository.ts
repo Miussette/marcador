@@ -178,6 +178,8 @@ function rowToMatch(r: Row): Match {
     awayTimeouts: num(r.away_timeouts),
     shotClock: downTimerFromDb(r.shot_clock),
     breakTimer: downTimerFromDb(r.break_timer),
+    gameDurationMs: r.game_duration_ms == null ? null : num(r.game_duration_ms),
+    timeoutActive: num(r.timeout_active) === 1,
     resultConfirmed: num(r.result_confirmed) === 1,
     sets: setsFromDb(r.sets),
     playerStats: statsFromDb(r.player_stats),
@@ -430,7 +432,7 @@ function insertBundle(bundle: ProjectBundle): Project {
       awayTeamId: away,
     })
     const playerStats = Object.fromEntries(Object.entries(match.playerStats ?? {}).filter(([id]) => playerMap.has(id)).map(([id, stat]) => [playerMap.get(id)!, stat]))
-    updateMatch(newId, { playerStats, sportState: match.sportState ?? null, possession: match.possession ?? null })
+    updateMatch(newId, { playerStats, sportState: match.sportState ?? null, possession: match.possession ?? null, gameDurationMs: match.gameDurationMs ?? null, timeoutActive: match.timeoutActive ?? false })
   }
   for (const event of bundle.events ?? []) {
     const matchId = matchMap.get(event.matchId)
@@ -632,6 +634,8 @@ export function createMatch(input: NewMatchInput): Match {
 }
 
 const MATCH_PATCH_COLUMNS: Record<string, string> = {
+  gameDurationMs: 'game_duration_ms',
+  timeoutActive: 'timeout_active',
   homeTeamId: 'home_team_id',
   awayTeamId: 'away_team_id',
   homeScore: 'home_score',
@@ -669,6 +673,7 @@ export function updateMatch(id: string, patch: Partial<Match>): Match {
   const current = getMatch(id)
   if (!current) throw new Error('El partido no existe.')
   const next = { ...current, ...patch } as Match
+  if ('gameDurationMs' in patch && next.gameDurationMs != null && (!Number.isFinite(next.gameDurationMs) || next.gameDurationMs < 0)) throw new Error('Duración de juego inválida.')
   if ('possession' in patch && next.possession !== null && next.possession !== 'home' && next.possession !== 'away') throw new Error('Posesión inválida.')
   if (next.homeTeamId === next.awayTeamId) throw new Error('El equipo local y visitante deben ser distintos.')
 

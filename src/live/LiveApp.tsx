@@ -6,6 +6,7 @@ import { OverlayView } from '@/features/display/OverlayView'
 import { useTicker } from '@/features/timer/useTicker'
 import { timerElapsed } from '@/features/timer/timer'
 import { displayClock, scoreText } from '@/features/sports/display'
+import { TimeoutBadge } from '@/features/display/TimeoutBadge'
 import { formatClock } from '@/utils/time'
 
 export function LiveApp() {
@@ -75,6 +76,7 @@ export function LiveApp() {
   const elapsed = state ? displayClock(state, timerElapsed(state.timer, tick)) : 0
   const button = 'rounded-lg border border-white/20 bg-slate-900 px-3 py-2 text-sm text-white hover:bg-slate-700'
   return <div className="relative h-screen w-screen overflow-hidden bg-black text-white" onMouseMove={reveal}>
+    <TimeoutBadge timer={state?.timeoutTimer} now={tick} />
     <video ref={video} autoPlay muted playsInline className="h-full w-full object-contain" />
     {!connected && <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-12 text-center"><Camera size={64} className="text-slate-500" /><h1 className="text-3xl font-bold">Cámara en vivo + OBS</h1><p className="max-w-xl text-slate-400">Selecciona una cámara e inicia la imagen. Para ver la mezcla de OBS, activa su cámara virtual y selecciona «OBS Virtual Camera».</p>{error && <p className="max-w-xl text-red-300" role="alert">{error}</p>}</div>}
     {state && showScore && connected && <div className="absolute bottom-[4vh] left-[4vw] max-w-[92vw] rounded-xl border border-white/20 bg-slate-950/90 px-[2vw] py-[1vh] shadow-xl"><p className="truncate text-[1.2vw] text-slate-300">{state.competition} · {state.periodLabel}</p><div className="flex items-center gap-[2vw] text-[2.5vw] font-bold"><span>{state.home?.shortName || state.home?.name || 'Local'}</span><span className="font-mono">{scoreText(state, 'home')} – {scoreText(state, 'away')}</span><span>{state.away?.shortName || state.away?.name || 'Visitante'}</span><span className="font-mono text-amber-300">{formatClock(elapsed)}</span></div>{state.sportState?.family === 'tennis' && <p className="text-[1.2vw]">Juegos {state.sportState.current.games.join('–')}</p>}</div>}

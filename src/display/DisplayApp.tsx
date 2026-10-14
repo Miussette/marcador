@@ -3,6 +3,7 @@ import { displayClock } from '@/features/sports/display'
 import { useEffect, useState } from 'react'
 import { DisplayChrome } from '@/display/DisplayChrome'
 import { CountdownOverlay } from '@/features/display/CountdownOverlay'
+import { TimeoutBadge } from '@/features/display/TimeoutBadge'
 import { PlayersPresentation } from '@/features/display/PlayersPresentation'
 import { OverlayView } from '@/features/display/OverlayView'
 import { WaitingScreen } from '@/features/display/WaitingScreen'
@@ -87,6 +88,7 @@ export function DisplayApp() {
       {state?.sportState ? <SportDetails state={state} /> : null}
       {state?.showPlayers && state.sportState?.family !== 'athletics' && !(state.design?.enabled && (state.design.preset === 'fiba1' || state.design.preset === 'fiba2')) ? <PlayersPresentation state={state} /> : null}
       {state?.countdown ? <CountdownOverlay countdown={state.countdown} now={tick} /> : null}
+      <TimeoutBadge timer={state?.timeoutTimer} now={tick} />
       {overlay ? <OverlayView payload={overlay} /> : null}
     </>
   )

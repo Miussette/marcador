@@ -288,6 +288,8 @@ function migrate(database: SqlDatabase): void {
   // Fase 3: partidos con estado de básquetbol (faltas, tiempos, shot clock…).
   const matchColumns = columnsOf('matches')
   const matchAdds: [string, string][] = [
+    ['game_duration_ms', 'INTEGER'],
+    ['timeout_active', 'INTEGER NOT NULL DEFAULT 0'],
     ['home_fouls', "INTEGER NOT NULL DEFAULT 0"],
     ['away_fouls', "INTEGER NOT NULL DEFAULT 0"],
     ['home_timeouts', "INTEGER NOT NULL DEFAULT 0"],

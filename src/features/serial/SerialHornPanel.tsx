@@ -4,10 +4,13 @@ import { Field, Input, Select } from '@/components/ui/Form'
 import { api } from '@/services/api'
 import { toast } from '@/stores/toastStore'
 import { useHornStore } from '@/stores/hornStore'
+import { useSettingsStore } from '@/stores/settingsStore'
+import { signalHorn } from './hornSound'
 import { DEFAULT_HORN, HORN_SETTING_KEY, parseHorn, validateHorn, type HornConfig } from './horn'
 
 export function SerialHornPanel() {
   const horn = useHornStore()
+  const settings = useSettingsStore()
   const [config, setConfig] = useState<HornConfig>({ ...DEFAULT_HORN })
   const [portName, setPortName] = useState('')
   const [ready, setReady] = useState(false)
@@ -35,6 +38,7 @@ export function SerialHornPanel() {
   return <section className="card p-5">
     <p className="label-muted mb-4">Bocina por USB / puerto COM</p>
     <p className="mb-3 text-xs text-muted">{horn.connected ? `Conectado: ${horn.portName}` : 'Desconectado'} · Envía una orden al controlador de la bocina.</p>
+    <label className="mb-3 flex items-center gap-2 text-sm"><input type="checkbox" checked={settings.get('horn.sound', 'true') === 'true'} onChange={event => void settings.set('horn.sound', String(event.target.checked))} />Sonar por los parlantes del PC</label>
     <fieldset disabled={disabled} className="grid grid-cols-2 gap-3 disabled:opacity-60">
       <Field label="Puerto COM" hint="Vacío: elegir entre los puertos detectados al conectar."><Input placeholder="COM3" value={portName} onChange={e => { setPortName(e.target.value); setDirty(true) }} /></Field>
       <Field label="Baudios"><Input type="number" min={1} max={4000000} value={config.baudRate} onChange={e => patch({ baudRate: Number(e.target.value) })} /></Field>
@@ -48,7 +52,7 @@ export function SerialHornPanel() {
     <div className="mt-4 flex flex-wrap gap-2">
       <Button disabled={disabled || !dirty} onClick={() => void save()}>Guardar</Button>
       {horn.connected ? <Button variant="secondary" disabled={horn.busy} onClick={() => void horn.disconnect()}>Desconectar</Button> : <Button variant="secondary" disabled={!ready || dirty || saving || horn.busy} onClick={() => void horn.connect().then(() => { if (useHornStore.getState().connected) setPortName(useHornStore.getState().portName) })}>Conectar</Button>}
-      <Button variant="secondary" disabled={!horn.connected || horn.busy || dirty} onClick={() => void horn.send()}>Probar bocina</Button>
+      <Button variant="secondary" disabled={horn.busy || dirty} onClick={() => void signalHorn()}>Probar bocina</Button>
     </div>
     {dirty && <p className="mt-2 text-xs text-warning">Guarda los cambios antes de conectar.</p>}
     {horn.error && <p role="alert" className="mt-3 text-xs text-danger">{horn.error}</p>}

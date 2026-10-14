@@ -71,7 +71,6 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
   const { officials, loaded, matchId } = useOfficialsStore()
 
   const [section, setSection] = useState<ControlSection>('score')
-  const [autoRun, setAutoRun] = useState(false)
   const [editingShotClock, setEditingShotClock] = useState(false)
   const [shotClockInput, setShotClockInput] = useState('24')
   const [showShotClock, setShowShotClock] = useState(true)
@@ -97,16 +96,6 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
   const shotMs = downTimerRemaining(shotClock, tick)
   const breakMs = downTimerRemaining(breakTimer, tick)
 
-  // Auto Run: el shot clock sigue al cronómetro de partido.
-  useEffect(() => {
-    if (!autoRun) return
-    if (match.timerRunning && !shotClock.running) {
-      void store().setShotClock(startDownTimer(shotClock))
-    } else if (!match.timerRunning && shotClock.running) {
-      void store().setShotClock(pauseDownTimer(shotClock))
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoRun, match.timerRunning, shotClock.running])
 
   const homePlayers = home ? (playersByTeam[home.id] ?? []) : []
   const awayPlayers = away ? (playersByTeam[away.id] ?? []) : []
@@ -264,6 +253,7 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
   return (
     <div className="basketball-control flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
       <HornControls />
+      {match.timeoutActive && <div className="flex items-center gap-3 rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm"><span>Tiempo muerto · {formatClock(breakMs)}</span><Button size="sm" onClick={() => void store().endTimeout()} disabled={saving}>Cerrar tiempo muerto</Button></div>}
       {/* Barra de acciones */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface p-2">
         <div className="flex flex-wrap gap-1.5">
@@ -618,15 +608,7 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
             <div className="mb-3 flex items-center justify-between gap-2">
               <p className="label-muted">Shot Clock</p>
               <div className="flex items-center gap-2">
-                <label className="flex cursor-pointer items-center gap-1.5 text-[11px] font-semibold text-muted">
-                  <input
-                    type="checkbox"
-                    checked={autoRun}
-                    onChange={(event) => setAutoRun(event.target.checked)}
-                    className="h-3.5 w-3.5 accent-[#2563EB]"
-                  />
-                  Auto Run
-                </label>
+                <span className="text-[11px] text-muted">Sigue al reloj de juego</span>
                 <button
                   type="button"
                   onClick={() => setShowShotClock(false)}
@@ -653,8 +635,8 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
                 size="sm"
                 icon={shotClock.running ? <Pause size={14} /> : <Play size={14} />}
                 onClick={() => void store().setShotClock(shotClock.running ? pauseDownTimer(shotClock) : startDownTimer(shotClock))}
-                disabled={saving || autoRun}
-                title={autoRun ? 'Desactiva Auto Run para controlarlo a mano' : undefined}
+                disabled={saving}
+                title="Control independiente del reloj de posesión"
               >
                 {shotClock.running ? 'Pausa' : 'Inicio'}
               </Button>

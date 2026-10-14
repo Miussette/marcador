@@ -16,7 +16,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   load: async () => {
     // Claves conocidas por la aplicación.
-    const keys = ['scoreboard.layout', 'display.monitorId', 'display.goalOverlay']
+    const keys = ['scoreboard.layout', 'display.monitorId', 'display.goalOverlay', 'horn.sound']
     try {
       const entries = await Promise.all(keys.map(async (key) => [key, await api.settings.get(key)] as const))
       const values: Record<string, string> = {}

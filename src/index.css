@@ -224,3 +224,9 @@
   .match-compact .basketball-score-grid { grid-template-columns: minmax(0, 1fr) 240px minmax(0, 1fr); }
   .match-compact .basketball-timer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+.match-discreet > header > div:first-child > div > p { display: none; }
+.match-discreet > .quick-videos { display: none; }
+.match-discreet > p { display: none; }
+.match-discreet .basketball-control { padding: 6px; gap: 6px; }
+.match-discreet .basketball-control .card { padding: 8px; }

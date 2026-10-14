@@ -21,10 +21,15 @@ import { useCountdownStore } from './countdownStore'
 import { useMatchesStore } from './matchesStore'
 import { useSettingsStore } from './settingsStore'
 import { toast } from './toastStore'
+import { basketballRemaining, expiredBasketballPatch, pauseBasketball, startBasketballShot, timeoutPatch } from '@/features/timer/basketballClocks'
+import { createDownTimer, pauseDownTimer } from '@/features/timer/timer'
+import { signalHorn } from '@/features/serial/hornSound'
 
 export type Side = 'home' | 'away'
 
 interface ActiveMatchState {
+  expireBasketballClocks: () => Promise<void>
+  endTimeout: () => Promise<void>
   adjustPlayerStat: (playerId: string, key: 'points' | 'fouls', delta: number) => Promise<void>
   setPossession: (side: Side | null) => Promise<void>
   sportAction: (action: SportAction) => Promise<void>
@@ -91,6 +96,7 @@ const timerOf = (match: Match): TimerSnapshot => ({
 })
 
 export const useActiveMatchStore = create<ActiveMatchState>((set, get) => {
+  const basketball = () => ['basketball', 'basketball3x3'].includes(get().project?.sport ?? '')
   const sync = (match: Match): void => {
     const { home, away, project } = get()
     const countdown = useCountdownStore.getState()
@@ -150,6 +156,17 @@ export const useActiveMatchStore = create<ActiveMatchState>((set, get) => {
   }
 
   return {
+    expireBasketballClocks: async () => {
+      const match = get().match
+      if (!match || !basketball() || get().saving) return
+      const patch = expiredBasketballPatch(match)
+      if (patch && await commit(patch)) void signalHorn()
+    },
+    endTimeout: async () => {
+      const match = get().match
+      if (!match) return
+      await commit({ timeoutActive: false, breakTimer: match.breakTimer ? pauseDownTimer(match.breakTimer) : null })
+    },
     adjustPlayerStat: async (playerId, key, delta) => {
       const current = get().match
       if (!current || get().saving) return
@@ -351,7 +368,8 @@ export const useActiveMatchStore = create<ActiveMatchState>((set, get) => {
       const key = side === 'home' ? 'homeTimeouts' : 'awayTimeouts'
       const next = Math.min(5, Math.max(0, match[key] + delta))
       if (next === match[key]) return
-      await commit({ [key]: next } as Partial<Match>)
+      const updated = await commit({ [key]: next, ...(delta > 0 && basketball() ? timeoutPatch(match) : {}) } as Partial<Match>)
+      if (updated && delta > 0 && basketball()) void signalHorn()
     },
 
     setResultConfirmed: async (confirmed) => {
@@ -370,7 +388,9 @@ export const useActiveMatchStore = create<ActiveMatchState>((set, get) => {
     setBreakTimer: async (timer) => {
       const match = get().match
       if (!match) return
-      await commit({ breakTimer: timer })
+      const beginning = basketball() && timer?.running && !match.breakTimer?.running
+      const updated = await commit({ breakTimer: timer, ...(basketball() && timer?.running ? { ...pauseBasketball(match), timeoutActive: true } : { timeoutActive: false }) })
+      if (beginning && updated) void signalHorn()
     },
 
     startClock: async () => {
@@ -385,6 +405,7 @@ export const useActiveMatchStore = create<ActiveMatchState>((set, get) => {
         timerStartedAt: Date.now(),
         timerElapsed: 0,
       }
+      if (basketball()) Object.assign(patch, startBasketballShot(match))
       if (match.status === 'scheduled') patch.status = 'live'
       await commit(patch)
     },
@@ -396,12 +417,14 @@ export const useActiveMatchStore = create<ActiveMatchState>((set, get) => {
         timerRunning: false,
         timerStartedAt: null,
         timerElapsed: timerElapsed(timerOf(match)),
+        ...(basketball() ? pauseBasketball(match) : {}),
       })
     },
 
     resumeClock: async () => {
       const match = get().match
       if (!match || match.timerRunning) return
+      if (basketball() && basketballRemaining(match) <= 0) { toast.info('El período terminó. Reinicia el reloj o cambia de período.'); return }
       if (match.sportState?.family === 'combat' && !match.sportState.current.goldenScore && match.timerElapsed >= match.sportState.config.roundSeconds * 1000) {
         toast.info('El round terminó. Reinicia el reloj o avanza al siguiente round.')
         return
@@ -410,17 +433,22 @@ export const useActiveMatchStore = create<ActiveMatchState>((set, get) => {
         toast.info('Partido finalizado: cambia el estado a "En juego" para controlar el cronómetro.')
         return
       }
-      await commit({ timerRunning: true, timerStartedAt: Date.now(), ...(match.status === 'scheduled' ? { status: 'live' } : {}) })
+      await commit({ timerRunning: true, timerStartedAt: Date.now(), ...(basketball() ? startBasketballShot(match) : {}), ...(match.status === 'scheduled' ? { status: 'live' } : {}) })
     },
 
     resetClock: async () => {
       if (!get().match) return
-      await commit({ timerRunning: false, timerStartedAt: null, timerElapsed: 0 })
+      await commit({ timerRunning: false, timerStartedAt: null, timerElapsed: 0, ...(basketball() ? { shotClock: createDownTimer(24000), gameDurationMs: null, timeoutActive: false, breakTimer: get().match?.breakTimer ? pauseDownTimer(get().match!.breakTimer!) : null } : {}) })
     },
 
     adjustClock: async (deltaMs) => {
       const match = get().match
       if (!match) return
+      if (basketball()) {
+        const elapsed = timerElapsed(timerOf(match))
+        await commit({ gameDurationMs: elapsed + Math.max(0, basketballRemaining(match) + deltaMs) })
+        return
+      }
       const timer = timerOf(match)
       const total = Math.max(0, timerElapsed(timer) + deltaMs)
       if (timer.running) {
@@ -435,12 +463,13 @@ export const useActiveMatchStore = create<ActiveMatchState>((set, get) => {
       if (!match || match.period === period) return
       await commit({
         period,
+        ...(basketball() ? { shotClock: createDownTimer(24000), gameDurationMs: null, timeoutActive: false, breakTimer: null } : {}),
         timerRunning: false,
         timerStartedAt: null,
         timerElapsed: 0,
         status: period === 'finished' ? 'finished' : match.status === 'finished' ? 'live' : match.status,
       })
-      toast.info(`Periodo: ${periodLabel(period)} (cronómetro a 00:00)`)
+      toast.info(`Periodo: ${periodLabel(period)}${basketball() ? '' : ' (cronómetro a 00:00)'}`)
     },
 
     setStatus: async (status) => {
@@ -452,6 +481,7 @@ export const useActiveMatchStore = create<ActiveMatchState>((set, get) => {
         patch.timerStartedAt = null
         patch.timerElapsed = timerElapsed(timerOf(match))
       }
+      if (status === 'finished' && basketball()) Object.assign(patch, pauseBasketball(match), { timeoutActive: false, breakTimer: match.breakTimer ? pauseDownTimer(match.breakTimer) : null })
       const updated = await commit(patch)
       if (updated && status === 'finished') {
         toast.info('Partido finalizado · cronómetro detenido.')

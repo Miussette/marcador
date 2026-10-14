@@ -307,6 +307,8 @@ export interface DownTimerSnapshot {
 export type PlayerStats = Record<string, { points: number; fouls: number }>
 
 export interface Match {
+  gameDurationMs?: number | null
+  timeoutActive?: boolean
   possession?: 'home' | 'away' | null
   sportState?: SportMatchState | null
   playerStats?: PlayerStats
@@ -650,6 +652,8 @@ export interface DisplayTeamInfo {
 }
 
 export interface DisplayState {
+  gameDurationMs?: number | null
+  timeoutTimer?: DownTimerSnapshot | null
   playerStats?: PlayerStats
   homeTimeouts?: number
   awayTimeouts?: number

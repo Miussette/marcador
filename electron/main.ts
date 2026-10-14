@@ -35,8 +35,8 @@ function createControlWindow(): void {
   const win = new BrowserWindow({
     width: 1440,
     height: 920,
-    minWidth: 1080,
-    minHeight: 640,
+    minWidth: 900,
+    minHeight: 600,
     show: false,
     backgroundColor: '#0B0F14',
     title: 'Marcador Pro',
@@ -46,6 +46,7 @@ function createControlWindow(): void {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      backgroundThrottling: false,
       partition: 'persist:control',
     },
   })

@@ -6,7 +6,7 @@ import { activeShortcuts, keyboardShortcut, normalizeShortcut } from '@/utils/sh
 import { useShortcutsStore } from '@/stores/shortcutsStore'
 import { useCountdownStore } from '@/stores/countdownStore'
 import { isQuarterSport, isSetSport } from '@/utils/format'
-import { useHornStore } from '@/stores/hornStore'
+import { signalHorn } from '@/features/serial/hornSound'
 import { createDownTimer, pauseDownTimer, resetDownTimer, setDownTimerMs, startDownTimer } from '@/features/timer/timer'
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -62,7 +62,7 @@ export function useMatchShortcuts(onAddEvent?: () => void): void {
         case 'points.home3': if (basketball) void store.addPoints('home', 3); break
         case 'points.away2': if (basketball) void store.addPoints('away', 2); break
         case 'points.away3': if (basketball) void store.addPoints('away', 3); break
-        case 'horn.send': void useHornStore.getState().send(); break
+        case 'horn.send': void signalHorn(); break
         case 'break.toggle': if (basketball) void store.setBreakTimer(breakTimer.running ? pauseDownTimer(breakTimer) : startDownTimer(breakTimer)); break
         case 'break.reset': if (basketball) void store.setBreakTimer(resetDownTimer(breakTimer)); break
         case 'break.30': if (basketball) void store.setBreakTimer(createDownTimer(30000)); break
