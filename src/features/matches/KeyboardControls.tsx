@@ -13,7 +13,7 @@ export function KeyboardControls() {
         if (controls) { setControls(null); return }
         const dialogs = Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"]'))
         const scope = dialogs.at(-1) ?? document.querySelector('[data-match-controls]')
-        const found = Array.from(scope?.querySelectorAll<HTMLElement>('button,input,select,textarea,a[href]') ?? []).filter(node => !node.matches(':disabled,[type="hidden"]') && node.getClientRects().length > 0)
+        const found = Array.from(scope?.querySelectorAll<HTMLElement>('button,input,select,textarea,summary,a[href]') ?? []).filter(node => !node.matches(':disabled,[type="hidden"]') && node.getClientRects().length > 0)
         setControls(found.map(node => ({ node, name: [node.closest('tr')?.querySelector('td:nth-child(2)')?.textContent, node.getAttribute('aria-label') || node.getAttribute('title') || node.textContent || node.closest('label')?.textContent || node.tagName].filter(Boolean).join(' · ').trim() })))
         setDigits(''); return
       }

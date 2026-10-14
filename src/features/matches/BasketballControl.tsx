@@ -262,7 +262,7 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+    <div className="basketball-control flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
       <HornControls />
       {/* Barra de acciones */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface p-2">
@@ -297,7 +297,7 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
 
       {/* Contenido por sección */}
       {section === 'score' ? (
-        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_340px_1fr]">
+        <div className="basketball-score-grid grid grid-cols-1 items-start gap-4 lg:grid-cols-[1fr_340px_1fr]">
           {scorePanel('home')}
 
           {/* Columna central: periodo + cancha de intercambio */}
@@ -328,11 +328,11 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
             </section>
 
             {/* Exchange Field */}
-            <section className="card p-5">
-              <p className="label-muted mb-3 flex items-center gap-2">
+            <details className="basketball-exchange card p-5">
+              <summary className="label-muted cursor-pointer flex items-center gap-2">
                 <ArrowLeftRight size={14} /> Exchange Field
-              </p>
-              <div className="space-y-3">
+              </summary>
+              <div className="mt-3 space-y-3">
                 <Select value={exchangeSide} onChange={(event) => setExchangeSide(event.target.value as Side)}>
                   <option value="home">{home?.name ?? 'Local'}</option>
                   <option value="away">{away?.name ?? 'Visitante'}</option>
@@ -367,7 +367,7 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
                   Intercambiar
                 </Button>
               </div>
-            </section>
+            </details>
           </div>
 
           {scorePanel('away')}
@@ -542,7 +542,7 @@ export function BasketballControl({ match, home, away, elapsedMs, saving }: Bask
       )}
 
       {/* Barra inferior de temporizadores */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="basketball-timer-grid grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Temporizador del partido */}
         <section className="card p-4">
           <p className="label-muted mb-3">Temporizador del partido</p>

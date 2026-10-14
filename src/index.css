@@ -192,3 +192,35 @@
 .animate-pulse-dot {
   animation: mp-pulse-dot 1.2s ease-in-out infinite;
 }
+
+/* Controles compactos: medidas reales, sin escalar ni recortar el contenido. */
+.match-compact > header { padding: 6px 12px; gap: 8px; }
+.match-compact > header > div:last-child { flex-wrap: wrap; }
+.match-compact button { min-height: 28px; }
+.match-compact button.h-10 { height: 30px; padding-inline: 10px; font-size: 12px; }
+.match-compact button.h-8 { height: 28px; padding-inline: 8px; font-size: 11px; }
+.match-compact .basketball-control { padding: 8px; gap: 8px; }
+.match-compact .basketball-control > * { flex-shrink: 0; }
+.match-compact .basketball-control .card { padding: 10px; }
+.match-compact .basketball-control .gap-4 { gap: 8px; }
+.match-compact .basketball-control .gap-2 { gap: 5px; }
+.match-compact .basketball-control .mb-3 { margin-bottom: 6px; }
+.match-compact .basketball-control .mt-3,
+.match-compact .basketball-control .mt-4 { margin-top: 8px; }
+.match-compact .basketball-control .pt-3 { padding-top: 6px; }
+.match-compact .basketball-control .text-7xl { font-size: 44px; }
+.match-compact .basketball-control .text-5xl { font-size: 32px; }
+.match-compact .basketball-control .text-4xl { font-size: 28px; }
+.match-compact .basketball-control .text-lg { font-size: 14px; }
+.match-compact .basketball-control button.h-16 { height: 38px; flex-direction: row; gap: 4px; }
+.match-compact .basketball-control button.h-14 { height: 38px; }
+.match-compact .basketball-control button.py-2\.5 { padding-block: 6px; }
+.match-compact .basketball-control select,
+.match-compact .basketball-control input:not([type="checkbox"]) { height: 30px; font-size: 12px; }
+.match-compact .basketball-timer-grid { gap: 8px; }
+.match-compact .basketball-timer-grid .grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.match-compact .basketball-control td { padding-block: 4px; }
+@media (min-width: 900px) {
+  .match-compact .basketball-score-grid { grid-template-columns: minmax(0, 1fr) 240px minmax(0, 1fr); }
+  .match-compact .basketball-timer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

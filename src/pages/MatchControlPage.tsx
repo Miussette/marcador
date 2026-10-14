@@ -50,6 +50,7 @@ export function MatchControlPage() {
   const loadTeam = usePlayersStore((state) => state.reloadTeam)
 
   const [screensOpen, setScreensOpen] = useState(false)
+  const [compact, setCompact] = useState(() => localStorage.getItem('match.control.compact') !== 'false')
   const [eventModalOpen, setEventModalOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<MatchEvent | null>(null)
 
@@ -115,7 +116,7 @@ export function MatchControlPage() {
   const status = STATUS_META[match.status]
 
   return (
-    <div data-match-controls className="flex h-screen flex-col overflow-hidden bg-app">
+    <div data-match-controls className={`flex h-screen flex-col overflow-hidden bg-app${compact ? ' match-compact' : ''}`}>
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-surface px-5 py-3">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" icon={<ArrowLeft size={16} />} onClick={() => navigate(`/p/${projectId}/matches`)}>
@@ -137,6 +138,7 @@ export function MatchControlPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setCompact(current => { localStorage.setItem('match.control.compact', String(!current)); return !current })}>{compact ? 'Vista normal' : 'Vista compacta'}</Button>
           {football && <HornControls />}
           <Button variant="outline" size="sm" onClick={() => setScreensOpen(true)}>3 pantallas</Button>
           <Button variant="outline" size="sm" onClick={() => store.setPlayersVisible(!showPlayers)}>
