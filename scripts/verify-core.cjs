@@ -80,6 +80,48 @@ async function run() {
   const db = load('electron/db.ts')
   const repo = load('electron/repository.ts')
   await db.initDatabase()
+  const examples = load('electron/examples.ts')
+  const originalCreatePlayer = repo.createPlayer
+  repo.createPlayer = () => { throw new Error('Fallo simulado al crear plantilla') }
+  assert.throws(() => examples.ensureExampleProjects('2026-10-14'), /Fallo simulado/)
+  repo.createPlayer = originalCreatePlayer
+  assert.equal(repo.listProjects().length, 0)
+  assert.equal(repo.getSetting('examples.sports.v1'), null)
+  examples.ensureExampleProjects('2026-10-14')
+  const sampleProjects = repo.listProjects()
+  assert.equal(sampleProjects.length, 3)
+  for (const sample of sampleProjects) {
+    const sampleTeams = repo.listTeams(sample.id)
+    assert.equal(sampleTeams.length, 2)
+    const [size, starters] = sample.sport === 'football' ? [18, 11] : sample.sport === 'futsal' ? [14, 5] : [12, 5]
+    for (const sampleTeam of sampleTeams) {
+      const squad = repo.listPlayersByTeam(sampleTeam.id)
+      assert.equal(squad.length, size)
+      assert.equal(squad.filter(p => p.isStarter).length, starters)
+      assert.equal(new Set(squad.map(p => p.number)).size, size)
+      assert(squad.every(p => p.firstName && p.lastName && p.position))
+      assert(sampleTeam.logo.startsWith('data:image/svg+xml'))
+    }
+    const fixture = repo.listMatches(sample.id)
+    assert.equal(fixture.length, 1)
+    assert(sampleTeams.some(t => t.id === fixture[0].homeTeamId))
+    assert(sampleTeams.some(t => t.id === fixture[0].awayTeamId))
+    assert.equal(fixture[0].timerRunning, false)
+    assert.equal(fixture[0].homeScore, 0)
+    assert(repo.listOfficialsByMatch(fixture[0].id).length >= 3)
+  }
+  const editedTeam = repo.listTeams(sampleProjects[0].id)[0]
+  repo.updateTeam(editedTeam.id, { name: 'Equipo editado' })
+  const editedPlayer = repo.listPlayersByTeam(editedTeam.id)[0]
+  repo.updatePlayer(editedPlayer.id, { firstName: 'Jugador editado' })
+  await db.closeDatabase(); await db.initDatabase()
+  examples.ensureExampleProjects('2026-10-15')
+  assert.equal(repo.listProjects().length, 3)
+  assert.equal(repo.getTeam(editedTeam.id).name, 'Equipo editado')
+  assert.equal(repo.listPlayersByTeam(editedTeam.id).find(p => p.id === editedPlayer.id).firstName, 'Jugador editado')
+  repo.deleteProject(sampleProjects[0].id)
+  examples.ensureExampleProjects('2026-10-15')
+  assert.equal(repo.listProjects().length, 2)
   const project = repo.createProject({ name: 'Prueba aislada', sport: 'basketball', season: '2026', location: '', date: '2026-10-08', modality: 'league' })
   const team = name => repo.createTeam({ projectId: project.id, name, shortName: name, code: '', logo: null, primaryColor: '#2563EB', secondaryColor: '#FFFFFF', city: '', country: '' })
   const home = team('Local'), away = team('Visita')

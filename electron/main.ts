@@ -6,6 +6,7 @@ import { registerIpcHandlers } from './ipc'
 import { playback, closeDisplay } from './display'
 import { stopServer } from './obsServer'
 import { configureSerialAccess } from './serial'
+import { ensureExampleProjects } from './examples'
 
 let controlWindow: BrowserWindow | null = null
 
@@ -77,6 +78,8 @@ function createControlWindow(): void {
 async function bootstrap(): Promise<void> {
   try {
     await initDatabase()
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Santiago' })
+    ensureExampleProjects(today)
     console.log('[main] Base de datos lista.')
   } catch (err) {
     dialog.showErrorBox(
