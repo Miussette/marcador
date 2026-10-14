@@ -4,6 +4,7 @@ import { downTimerRemaining } from '@/features/timer/timer'
 import { previewState } from '@/features/design/designModel'
 import type { DesignItem, DisplayState } from '@/types'
 import { formatClock } from '@/utils/time'
+import { FittedText } from './FittedText'
 
 interface DesignItemViewProps {
   item: DesignItem
@@ -76,7 +77,8 @@ export function DesignItemView({ item, state, elapsedMs }: DesignItemViewProps) 
       )
       break
     case 'period':
-      content = <span className="font-bold tracking-wider uppercase">{live.periodLabel}</span>
+      padding = '0'
+      content = <FittedText text={live.periodLabel} width={item.w} height={item.h} fontSize={item.fontSize} fontFamily={item.fontFamily} className="font-bold tracking-wider uppercase" />
       break
     case 'clock': {
       const clock = item.clockStyle === 'basketball' && (elapsedMs ?? 0) < 60_000 ? (Math.max(0, elapsedMs ?? 0) / 1000).toFixed(1) : formatClock(elapsedMs ?? 0)
